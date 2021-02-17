@@ -1,6 +1,6 @@
 {
   "name": "@synthetical/synthetical",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.0",
   "description": "",
   "main": "./build/index.js",
   "files": [
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "del-cli build/**",
-    "publish": "npm publish --tag beta",
+    "pub": "npm version prerelease && npm run build && npm publish --tag beta --access public",
     "test": "jest",
     "test:watch": "jest --watchAll --no-cache"
   },
