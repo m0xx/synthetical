@@ -1,6 +1,7 @@
 import FMWRouter, {HTTPVersion} from 'find-my-way';
 import compose from 'koa-compose';
 import type Router from "find-my-way";
+import qs from 'qs';
 
 export type SyntheticalRequest = {
     url: string
@@ -18,7 +19,7 @@ class Context {
     _status: number = 0
     _body: string = ''
     _headers: {[key: string]: string} = {}
-    constructor(private _req: SyntheticalRequest) {
+    constructor(private _req: SyntheticalRequest, public params: { [k: string]: string | undefined }, public query: {[key: string]: any}) {
     }
     status(status: number): Context {
         this._status = status;
@@ -40,6 +41,16 @@ class Context {
 
 export type Middleware = (ctx: Context, next: () => Promise<void>) => Promise<void>
 
+function parseQuery(reqUrl: string) {
+    try {
+        const url = reqUrl[0] === '/' ? new URL(`http://host${reqUrl}`) : new URL(reqUrl)
+        return qs.parse(url.search, {ignoreQueryPrefix: true})
+    }
+    catch(err) {
+        throw new Error("Invalid url format")
+    }
+}
+
 class RouterProxy {
     _fmwRouter: Router.Instance<HTTPVersion.V1>
     constructor() {
@@ -56,8 +67,10 @@ class RouterProxy {
     }
     on(method: Router.HTTPMethod, path: string, middlewares: Middleware[]) {
         // @ts-ignore
-        this._fmwRouter.on('GET', path, (req: any, resolve: (res: HttpResponse) => void) => {
-            const ctx = new Context(req);
+        this._fmwRouter.on('GET', path, (req: any, resolve: (res: HttpResponse) => void, params) => {
+            // TODO: should handle error
+            const query = parseQuery(req.url)
+            const ctx = new Context(req, params || {}, query);
             const fn = compose(middlewares)
 
             fn(ctx)

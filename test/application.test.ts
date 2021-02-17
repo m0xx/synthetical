@@ -1,10 +1,11 @@
 import Synthetical from '../lib';
 
+
 test('returns 404 when no handler found', async () => {
     const app = new Synthetical();
 
     const res = await app.handleRequest({
-        url: '/',
+        url: `/`,
         method: 'GET'
     })
 
@@ -59,5 +60,30 @@ test('should handle middleware errors', async () => {
 
 });
 
+test('should parse query str', async (done) => {
+    const app = new Synthetical();
+
+    app.on('GET', '/test', async (ctx) => {
+        expect(ctx.query.foo).toBe('bar');
+        done();
+    })
+
+    app.handleRequest({ url: '/test?foo=bar', method: 'GET' })
+});
+
+test('should parse params from path', async (done) => {
+    const app = new Synthetical();
+
+    app.on('GET', '/user/:id', async (ctx) => {
+        expect(ctx.params.id).toBe('2');
+        done();
+    })
+
+    app.handleRequest({ url: '/user/2', method: 'GET' })
+});
+
 test('should execute middleware for default route', async () => {
+})
+
+test('invalid url format', async () => {
 })
